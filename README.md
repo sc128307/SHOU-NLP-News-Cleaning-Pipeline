@@ -81,8 +81,8 @@ pip install torch transformers
 如果您的网络无法连接 Hugging Face，请使用此方法。
 
 1.  **下载模型包**：
-      * **链接**: **`https://pan.baidu.com/s/1mcNLdz9p38ChWeAGs4MSgA?pwd=vx86`**
-      * **提取码**: **`vx86`**
+      * **链接**: `https://pan.baidu.com/s/1mcNLdz9p38ChWeAGs4MSgA?pwd=vx86`
+      * **提取码**: `vx86`
 2.  **解压**：
       * 将下载的压缩包解压到项目根目录下。
       * 确保文件夹名称为 **`news-body-classifier-model`**。
