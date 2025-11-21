@@ -24,10 +24,7 @@ Final_Output_TXT/
 
 # --- AI 模型 (体积巨大，GitHub 传不上去) ---
 # 如果您想传模型，需要用 Git LFS，但通常建议忽略
-body-classifier-model/
-roberta-ner-model-final/
-roberta-ner-model-v1/
-roberta-ner-model/
+news-body-classifier-model/
 
 # --- 系统文件 ---
 .DS_Store
@@ -35,3 +32,7 @@ Thumbs.db
 
 # --- Log ---
 *.log
+
+
+# 忽略上传脚本
+upload_to_hf.py

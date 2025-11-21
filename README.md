@@ -24,7 +24,7 @@
 ```text
 Project_Root/
 │
-├── body-classifier-model/      # [核心] 预训练好的 AI 模型文件夹 (请勿删除!)
+├── news-body-classifier-model/      # [核心] 预训练好的 AI 模型文件夹 (请勿删除!)
 │   ├── config.json
 │   ├── model.safetensors
 │   └── ...
@@ -65,6 +65,34 @@ pip install pandas openpyxl striprtf nltk ttkbootstrap
 pip install torch transformers
 ```
 
+## 🧠 模型设置 (Model Setup) - 重要！
+
+本工具需要加载 `news-body-classifier-model` 才能工作。您有两种方式获取模型：
+
+### 方法 A：自动下载 (推荐 - Hugging Face)
+
+默认情况下，脚本会自动连接 Hugging Face 服务器下载模型。
+
+  * **优点**：无需任何操作，保持网络通畅即可。
+  * **操作**：直接运行工具，无需修改设置。
+
+### 方法 B：手动下载 (备用 - 百度网盘)
+
+如果您的网络无法连接 Hugging Face，请使用此方法。
+
+1.  **下载模型包**：
+      * **链接**: **`https://pan.baidu.com/s/1mcNLdz9p38ChWeAGs4MSgA?pwd=vx86`**
+      * **提取码**: **`vx86`**
+2.  **解压**：
+      * 将下载的压缩包解压到项目根目录下。
+      * 确保文件夹名称为 **`news-body-classifier-model`**。
+      * *检查：该文件夹内应包含 `config.json` 和 `model.safetensors` 等文件。*
+3.  **配置工具**：
+      * 打开工具 GUI。
+      * 在 **“3. 模型路径”** 输入框中，点击“浏览”，选择刚刚解压的 `news-body-classifier-model` 文件夹。
+      * 或者手动填入路径：`./news-body-classifier-model`。
+
+
 ## 🚀 使用说明 (Usage)
 
 ### 方法 A：使用图形界面 (推荐)
@@ -73,7 +101,7 @@ pip install torch transformers
 2.  在弹出的界面中：
       * **输入目录**：选择包含 `.rtf` 文件的文件夹（支持包含子文件夹）。
       * **输出目录**：选择一个空文件夹，用于存放生成的 `.txt` 和 `.xlsx`。
-      * **模型路径**：默认会自动指向 `body-classifier-model`，通常无需修改。
+      * **模型路径**：默认会自动指向 `news-body-classifier-model`，通常无需修改。
 3.  点击 **“开始处理”**。
 4.  等待进度条完成，结果将自动保存在输出目录中。
 
@@ -84,8 +112,6 @@ pip install torch transformers
 ```bash
 python pipeline_gui.py
 ```
-
-
 
 
 ## 🧠 技术原理 (Technical Details)
@@ -196,4 +222,3 @@ label-studio start
 
 **Last Updated:** 2025-11-21
 
-```

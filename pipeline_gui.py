@@ -32,7 +32,6 @@ class App:
         self.root = root
         self.root.title("NLP 智能语料清洗工具 (Team Version)")
 
-        # ================= 【修改开始】窗口尺寸优化 =================
         # 1. 设定目标宽高达稍微大一点，视觉更舒适
         window_width = 1000
         window_height = 750
@@ -50,14 +49,13 @@ class App:
 
         # (可选) 设置最小尺寸，防止用户把窗口拖得太小导致排版错乱
         self.root.minsize(800, 600)
-        # ================= 【修改结束】 =================
 
         # 默认路径设置 (相对路径)
         self.input_dir = tk.StringVar()
         self.output_dir = tk.StringVar()
 
         # 默认模型路径指向当前目录下的文件夹
-        default_model = os.path.join(CURRENT_DIR, "body-classifier-model")
+        default_model = "gysgzyh/news-body-classifier"
         self.model_path = tk.StringVar(value=default_model)
 
         self.create_widgets()
