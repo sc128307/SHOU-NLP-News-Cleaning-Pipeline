@@ -1,0 +1,37 @@
+# --- Python 垃圾文件 ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.conda/
+
+# --- 数据文件 (体积大/隐私/可复现) ---
+# 原始 RTF 数据
+data/
+# 中间过程产生的 CSV
+*.csv
+# Label Studio 的大 JSON
+*.json
+# 最终生成的 TXT 结果
+Final_Hybrid_TXT/
+Final_Cleaned_TXT/
+Final_Output_TXT/
+# Excel 结果
+*.xlsx
+
+# --- AI 模型 (体积巨大，GitHub 传不上去) ---
+# 如果您想传模型，需要用 Git LFS，但通常建议忽略
+body-classifier-model/
+roberta-ner-model-final/
+roberta-ner-model-v1/
+roberta-ner-model/
+
+# --- 系统文件 ---
+.DS_Store
+Thumbs.db
+
+# --- Log ---
+*.log
