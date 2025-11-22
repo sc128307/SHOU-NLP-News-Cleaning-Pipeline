@@ -220,5 +220,4 @@ label-studio start
 
 -----
 
-**Last Updated:** 2025-11-21
-
+![Last Commit](https://img.shields.io/github/last-commit/sc128307/SHOU-NLP-News-Cleaning-Pipeline?label=Last%20Updated&style=flat-square&color=blue)
