@@ -181,8 +181,8 @@ label-studio start
     
     <View style="display: flex; gap: 20px; margin-top: 5px;">
       <Text name="legend_grey" value="⚪ 灰色 = 结构性切除 (Header/Footer)" style="color: #999; font-size: 14px; font-weight: bold;"/>
-      <Text name="legend_red" value="🔴 红色 = AI 智能剔除 (Noise)" style="color: red; font-weight: bold; font-size: 14px;"/>
-      <Text name="legend_yellow" value="🟡 黄色 = 漏网之鱼/人工补刀 (Missed)" style="color: #d4b106; font-weight: bold; font-size: 14px;"/>
+      <Text name="legend_red" value="🔴 红色 = AI 智能清洗 (Noise)" style="color: red; font-weight: bold; font-size: 14px;"/>
+      <Text name="legend_yellow" value="🟡 黄色 = 人工添加 (Missed)" style="color: #d4b106; font-weight: bold; font-size: 14px;"/>
     </View>
   </View>
   
