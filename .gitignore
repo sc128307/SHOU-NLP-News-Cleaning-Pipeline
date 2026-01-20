@@ -12,6 +12,9 @@ build/
 
 # === Models (模型文件太大，不上传) ===
 models/
+# Models - 忽略所有模型文件
+models/noise-cleaner-deberta-v2/
+models/all-MiniLM-L6-v2/
 *.bin
 *.pth
 *.h5

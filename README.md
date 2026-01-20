@@ -1,223 +1,304 @@
+# 🧹 NLP Intelligent Corpus Cleaning Tool
 
-# NLP Intelligent Corpus Cleaning Tool (NLP 智能语料清洗工具)
+### (NLP 智能语料清洗工具 - Electron 版)
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![PyTorch](https://img.shields.io/badge/PyTorch-Enabled-red) ![Transformers](https://img.shields.io/badge/HuggingFace-Transformers-yellow)
+这是一个专为**新闻语料处理**设计的现代化桌面工具。它结合了 **React ** 和 **Python **，能够自动将格式混乱的 RTF 新闻文档清洗为结构化的数据。
 
-这是一个专为新闻语料处理设计的自动化清洗管线。它能够将原始的、格式混乱的 **RTF 文档** 批量转换为结构化清晰、内容纯净的 **TXT 和 Excel 数据**。
+---
 
-该工具采用 **“规则 + AI” 混合架构**，结合了正则表达式的精准结构提取能力和 DistilBERT 模型的语义理解能力，有效去除正文中的广告、图片说明、无关链接及作者简介等噪音。
+## ✨ 核心功能
 
-## ✨ 主要功能 (Key Features)
+* **⚡ 硬件加速**：自动识别你的电脑硬件。
+* **NVIDIA 显卡**：开启 CUDA 加速。
+* **Mac M1/M2/M3**：开启 Metal (MPS) 加速。
+* **普通电脑**：自动切换 CPU 模式，保证能跑。
 
-* **🚀 全自动批处理**：支持递归扫描文件夹，一键处理成百上千个 RTF 文件。
-* **🧠 AI 智能去噪**：内置微调过的 DistilBERT 分类模型，能精准识别并剔除正文夹杂的广告、图片描述和无关引导语。
-* **📐 精准结构提取**：利用 Regex 规则完美提取 `TITLE` (标题), `DATE` (日期), `SOURCE` (来源) 和 `BODY` (正文)。
-* **🖥️ 图形化界面 (GUI)**：提供现代化的操作界面，非技术人员也能轻松使用。
-* **⚙️ 硬件自适应**：自动检测系统硬件。有 NVIDIA 显卡则使用 CUDA 加速，无显卡自动切换至 CPU 模式（组员无需配置显卡）。
-* **📊 进度与日志**：生成 Excel 汇总表，并支持 CSV 增量记录检查进度。
-* **🔍 质量验证**：支持生成 Label Studio 格式的差异对比文件（Diff View），用于人工核查清洗效果。
 
-## 📂 项目结构 (Directory Structure)
+* **🧠 AI 智能去噪**：内置 DeBERTa AI 模型，自动识别并删除广告、无关链接和图片说明等噪音。
+* **📂 批量处理**：一键处理成百上千个文件。
+* **📊 可视化**：实时进度条、硬件状态监控、Excel 报表生成。
 
-在使用前，请确保您的目录结构如下所示：
+---
+
+## 🛠️ 第一步：环境准备 (必读)
+
+在运行本软件之前，你的电脑需要安装以下三个基础软件。如果已安装请跳过。
+
+### 1. 安装 Node.js (用于运行界面)
+
+* **下载地址**: [Node.js 官网](https://nodejs.org/)
+* **版本建议**: 下载 **LTS (长期支持版)**，例如 v18 或 v20。
+* **检查方法**: 打开终端(CMD)，输入 `node -v`，如果不报错即为成功。
+
+### 2. 安装 Python (用于运行 AI)
+
+* **下载地址**: [Python 官网](https://www.python.org/downloads/)
+* **版本建议**: **Python 3.8 ~ 3.11** (建议 3.10)。
+* **注意**: 安装时务必勾选 **"Add Python to PATH"**。
+
+### 3. 安装 Git (用于下载代码)
+
+* **下载地址**: [Git 官网](https://git-scm.com/)
+* **说明**: 一路点击 Next 安装即可。
+
+---
+
+## 📥 第二步：下载与安装
+
+### 1. 下载项目代码
+
+找一个你存放代码的文件夹（例如 D盘），新建文件夹，在空白处右键 -> "Open Git Bash Here" 或者打开终端：
+
+```bash
+git clone https://github.com/你的用户名/SHOU-NLP-News-Cleaning-Pipeline.git
+cd SHOU-NLP-News-Cleaning-Pipeline
+```
+
+### 2. 安装后端依赖 (Python)
+
+在项目**根目录**下，运行以下命令来安装 AI 引擎需要的库：
+
+```bash
+pip install -r requirements.txt
+```
+
+> **⚠️ 关于显卡加速 (CUDA)**：
+> 上面的命令默认安装 CPU 版 PyTorch。如果你有 NVIDIA 显卡并想跑得更快，请去 [PyTorch 官网](https://pytorch.org/get-started/locally/) 复制对应的安装命令覆盖安装。
+
+### 3. 安装前端依赖 (Node.js)
+
+进入前端文件夹并安装依赖：
+
+```bash
+cd css-interface
+npm install
+```
+
+---
+
+## 📥 第三步：下载 AI 模型 (关键！)
+
+为了减小软件体积，核心模型文件不包含在代码中，**你需要手动下载并放入指定位置**。
+
+### 1. 下载模型文件
+
+请从以下任一地址下载模型包：
+
+* **百度网盘**: [点击这里下载] (提取码: `vx86`) *(请填入你真实的链接)*
+* **HuggingFace**: [点击这里下载] *(如果你上传了的话)*
+
+### 2. 放置模型
+
+下载并解压后，请确保你的**项目根目录**下有一个名为 `models` 的文件夹，结构如下：
 
 ```text
-Project_Root/
-│
-├── news-body-classifier-model/      # [核心] 预训练好的 AI 模型文件夹 (请勿删除!)
-│   ├── config.json
-│   ├── model.safetensors
-│   └── ...
-│
-├── pipeline_backend.py         # 后端核心逻辑脚本
-├── pipeline_gui.py             # 图形界面脚本
-├── start_tool.bat              # [推荐] Windows 一键启动脚本
-│
-├── requirements.txt            # 依赖库列表 (可选)
-└── README.md                   # 说明文档
-````
+SHOU-NLP-News-Cleaning-Pipeline/
+├── api.py                 # [后端] Python 入口
+├── pipeline_modules.py    # [后端] AI 核心逻辑
+├── requirements.txt       # [后端] 依赖列表
+├── models/                # [模型文件夹]
+│   ├── noise-cleaner-deberta-v2/
+│   │   └── final/         # <--- 注意：模型文件必须在这里面！
+│   │       ├── config.json
+│   │       ├── model.safetensors
+│   │       └── ...
+│   └── all-MiniLM-L6-v2/
+│       └── ...
+└── css-interface/         # [前端] 界面源码
 
-## 🛠️ 安装指南 (Installation)
+```
 
-### 1\. 环境准备
+DeBERTa 模型:
 
-建议使用 Anaconda 创建一个独立的 Python 环境，以避免冲突。
+路径: models/noise-cleaner-deberta-v2/final/
 
+确保 config.json 和 model.safetensors 在 final 文件夹里面。
+
+MiniLM 模型:
+
+路径: models/all-MiniLM-L6-v2/
+
+---
+
+## 🚀 第四步：启动软件
+
+一切准备就绪！现在启动它。
+
+1. **打开终端**，确保你位于 `css-interface` 文件夹内：
 ```bash
-# 1. 创建环境 (建议 Python 3.9 或 3.10)
-conda create -n nlp-corpus python=3.9
-
-# 2. 激活环境
-conda activate nlp-corpus
+# 如果你还在根目录
+cd css-interface
 ```
 
-### 2\. 安装依赖
 
-在终端中运行以下命令安装所需的 Python 库：
-
+2. **运行启动命令**：
 ```bash
-# 安装基础依赖
-pip install pandas openpyxl striprtf nltk ttkbootstrap
-
-# 安装 AI 相关依赖 (PyTorch 和 Transformers)
-# 如果您有 NVIDIA 显卡，建议去 pytorch.org 获取专门的安装命令以启用 GPU 加速
-# 如果只有 CPU，直接运行：
-pip install torch transformers
-```
-
-## 🧠 模型设置 (Model Setup) - 重要！
-
-本工具需要加载 `news-body-classifier-model` 才能工作。您有两种方式获取模型：
-
-### 方法 A：自动下载 (推荐 - Hugging Face)
-
-默认情况下，脚本会自动连接 Hugging Face 服务器下载模型。
-
-  * **优点**：无需任何操作，保持网络通畅即可。
-  * **操作**：直接运行工具，无需修改设置。
-
-### 方法 B：手动下载 (备用 - 百度网盘)
-
-如果您的网络无法连接 Hugging Face，请使用此方法。
-
-1.  **下载模型包**：
-      * **链接**: `https://pan.baidu.com/s/1mcNLdz9p38ChWeAGs4MSgA?pwd=vx86`
-      * **提取码**: `vx86`
-2.  **解压**：
-      * 将下载的压缩包解压到项目根目录下。
-      * 确保文件夹名称为 **`news-body-classifier-model`**。
-      * *检查：该文件夹内应包含 `config.json` 和 `model.safetensors` 等文件。*
-3.  **配置工具**：
-      * 打开工具 GUI。
-      * 在 **“3. 模型路径”** 输入框中，点击“浏览”，选择刚刚解压的 `news-body-classifier-model` 文件夹。
-      * 或者手动填入路径：`./news-body-classifier-model`。
-
-
-## 🚀 使用说明 (Usage)
-
-### 方法 A：使用图形界面 (推荐)
-
-1.  **双击运行**项目目录下的 `start_tool.bat` 文件。
-2.  在弹出的界面中：
-      * **输入目录**：选择包含 `.rtf` 文件的文件夹（支持包含子文件夹）。
-      * **输出目录**：选择一个空文件夹，用于存放生成的 `.txt` 和 `.xlsx`。
-      * **模型路径**：默认会自动指向 `news-body-classifier-model`，通常无需修改。
-3.  点击 **“开始处理”**。
-4.  等待进度条完成，结果将自动保存在输出目录中。
-
-### 方法 B：命令行运行 (开发者模式)
-
-如果您希望查看详细的控制台日志，可以在激活环境后运行：
-
-```bash
-python pipeline_gui.py
+npm run dev
 ```
 
 
-## 🧠 技术原理 (Technical Details)
+3. **等待启动**：
+* 此时会弹出一个软件窗口。
+* **注意**：左下角的硬件卡片可能会显示 *"Checking Hardware..."* 或 *"Loading..."* 约 **5~10秒**。这是 Python 正在后台加载 AI 引擎，**请耐心等待**，直到它显示出你的显卡型号（如 RTX 4070 或 CPU Mode）。
 
-本工具采用 **Hybrid Extraction Strategy (混合提取策略)**：
 
-1.  **RTF 清洗**：使用 `striprtf` 库解析富文本，并辅以自定义正则修复常见的粘连问题（如 `toChina`）。
-2.  **结构化提取 (Regex)**：
-      * 利用新闻稿固定的排版特征（如 Copyright 行、Document ID 行）进行物理切割，精准分离 Header（元数据）和 Footer（页脚）。
-      * 提取 Title, Date, Source。
-3.  **正文清洗 (AI Classifier)**：
-      * 将正文部分切分为句子。
-      * 使用微调后的 **DistilBERT** 模型逐句判断：是 `CONTENT` (保留) 还是 `NOISE` (丢弃)。
-      * 辅助规则：利用正则进一步清洗模型可能漏掉的 URL、署名 (Byline) 和图片说明。
-4.  **扫尾逻辑**：自动检测并切除文章末尾残留的作者简介 (Bio) 或联系方式。
+---
 
-## 📄 输出格式 (Output)
+## 📖 软件功能页面详解 (User Manual)
 
-生成的 `.txt` 文件将采用类似 XML 的标签格式，方便后续进行 LDA 主题模型分析或导入数据库：
+本软件主要包含三个核心交互区域，分别对应**配置**、**运行**和**监控**。
 
-```xml
-<TITLE>Senate to end POGO probe</TITLE>
-<DATE>19 October 2024</DATE>
-<SOURCE>The Manila Times</SOURCE>
-<BODY>
-THE Senate Committee on Women, Children... (此处为清洗后的纯净正文)
-...
-</BODY>
-```
+### 1. 🏠 主控面板 (Dashboard)
+
+这是软件启动后的默认页面，是操作台。
+
+**👀 你会看到什么：**
+
+* **⚡ 硬件状态卡片 (Hardware Status)**：
+* 位于左下角/侧边栏。
+* **绿色 (CUDA Accelerated)**：说明你的电脑有 NVIDIA 显卡，AI 运行速度会很快。
+* **紫色 (Apple Metal)**：说明你是 Mac 电脑，正在使用 M 芯片加速。
+* **灰色 (CPU Mode)**：说明正在使用处理器运行，速度稍慢但也能用。
+
+
+* **🧠 模型状态 (Core Engine)**：
+* 显示 `DeBERTa Ready` 表示 AI 模型已加载完毕。
+* 如果显示 `Loading...`，请耐心等待几秒。
+
+
+* **📂 路径选择器**：
+* **Source Directory**: 选择存放原始 RTF 新闻稿的文件夹。
+* **Destination Directory**: 选择一个空文件夹，用来存放清洗好的 TXT 和 Excel 
+* **Destination Directory**: **推荐勾选Auto Set /Outout**，会自动在Source Directory下创建output目录。
+
+
+
+**👉 你需要做什么：**
+
+1. 点击 `Source Directory` 选择你的语料文件夹。
+2. 点击 `Destination Directory` 选择保存结果的位置。
+3. 点击最下方的 **Initialize Run (▶)** 按钮开始任务。
+
+---
+
+### 2. 🛡️ 语义规则编辑器 (Semantic Rules Editor)
+
+*入口：位于侧边栏的“Dashboard”下方*
+
+你可以在这里设置用于筛选文章话题的规则。
+
+**👀 你会看到什么：**
+
+* **✅ Positive Rules (保留规则)**：
+* 这里列出的关键词/句子，告诉 AI：“只要文章里出现这些话题，就**一定保留**，不要删错了。”
+* *例子：Diplomacy, Bilateral relations, Government official visits.*
+
+
+* **❌ Negative Rules (剔除规则)**：
+* 这里列出的关键词，告诉 AI：“这些通常是垃圾广告或无关内容，**优先删除**。”
+* *例子：Stock market fluctuations, Holiday packages, Celebrity gossip.*
+
+
+
+**👉 你需要做什么：**
+
+* 如果你发现 AI 把某些重要的新闻误删了，在 **Positive** 里加一个关键词。
+* 如果你发现清洗结果里还残留着广告，在 **Negative** 里加一个关键词。
+* 修改完后，记得点击 **Save Config**。
+
+---
+
+
+### 3. 🔬 审查实验室 (Review Lab)
+
+*入口：任务完成后点击 "Review Lab" 按钮*
+
+在这里，你可以直观地看到 AI 到底对原始文档做了什么——它删了哪里？保留了哪里？这是确保数据质量最关键的一步。
+
+**👀 你会看到什么 (颜色解码)：**
+
+界面中文本会以不同的背景色显示，它们代表不同的含义：
+
+* 🔴 **红色高亮 (AI Removed)**：
+* **含义**：这是被 AI 模型判定为“噪音”并**删除**的内容。
+* **通常包括**：广告、图片说明、无关的推荐链接、作者的社交媒体账号等。
+* **你需要检查**：快速扫视红色区域，确认**没有**误删重要的新闻正文。
+
+
+* ⚪ **灰色高亮 (Rule Removed)**：
+* **含义**：这是被正则表达式（规则）**切除**的结构化信息。
+* **通常包括**：文档头部的版权声明、日期、来源，以及底部的无关页脚。
+* **状态**：这些信息虽然从正文中移除了，但通常会被提取到 Excel 的元数据列中。
+
+
+* ⚫ **普通黑字 (Kept)**：
+* **含义**：这是最终被**保留**下来的纯净新闻正文。
+* **结果**：这部分内容会进入最终的 `.txt` 文件。
+
+
+
+**👉 你需要做什么：**
+
+1. **手动修改**： AI 并不是完美的。在浏览时，如果你发现 AI 犯了错，请立即纠正。
+2. **标记完成与进度**：当你确认一篇文章没问题后，务必点击右上角的 "Mark Checked" 按钮。
+此时文件会被标记为绿色（已完成）
+3. **目录进度**: 左侧文件列表会显示每个子文件夹的完成度（例如 Global_News: 15/50）。请确保你负责的文件夹进度达到 100%。
+
+
+---
+
+
+### 4. 📊 输出结果 (The Output)
+
+任务完成后，打开你设置的 **Output Folder**，你会得到以下成果：
+
+**📁 结果文件结构：**
+
+1. **📄 Cleaned TXT Files**:
+* 每个原始 RTF 对应一个 TXT。
+* 内容已去除广告，并自动标记了 `<TITLE>`, `<DATE>`, `<BODY>` 等标签。
+
+
+2. **📈 Excel 汇总表 (Summary.xlsx)**:
+* 包含所有文章的元数据（标题、日期、来源）汇总。
+* 在Mark Checked之后，Checked会变成YES。
+
+
+3. **🔍 差异对比文件 (diff_check.json)**:
+* **高级功能**：实现Review Lab中不同文本的颜色标记。
+
+
+
+---
+
+> 📖 详细功能介绍请阅读：[用户手册 (MANUAL.md)](https://www.google.com/search?q=./MANUAL.md)
+
+
 
 ## ❓ 常见问题 (FAQ)
 
-**Q: 启动 `start_tool.bat` 时闪退怎么办？**
-A: 请右键点击该文件选择“编辑”，查看是否正确调用了您的 Conda 环境。或者直接打开 Anaconda Prompt，`cd` 到该目录，输入 `start_tool.bat` 运行以查看报错信息。
+**Q: 打开软件后一直显示 "Loading path..." 或者是灰色的？**
+A: 请给它一点时间（10-15秒）。如果 1分钟还没反应，请查看刚才运行 `npm run dev` 的那个黑色终端窗口，看看有没有报错信息。
 
-**Q: 我的电脑没有 NVIDIA 显卡，能用吗？**
-A: **可以。** 程序会自动检测硬件。如果没有检测到 GPU，会自动切换到 CPU 模式。虽然速度会比 GPU 慢一些，但完全可用。
+**Q: 报错 `ModuleNotFoundError`？**
+A: 这说明你忘记运行 `pip install -r requirements.txt` 了，或者安装错位置了。请回到第二步。
 
-**Q: 输出的 Excel 中某些字符显示乱码？**
-A: 脚本已内置非法字符清洗功能。如果仍有问题，请确保您的系统支持 UTF-8 编码。
+**Q: 为什么第一次处理速度很慢？**
+A: 模型需要“预热”。第一次点击 Start 后，AI 需要加载到内存，之后的处理速度会加快。
 
+---
 
-## 🔍 质量验收 (Quality Assurance with Label Studio)
+## 📁 项目结构说明 (供开发者参考)
 
-为了确保清洗效果准确无误，本工具支持生成可视化对比文件。您可以使用 **Label Studio** 直观地查看哪些内容被切除了，哪些被保留了。
+```text
+Project_Root/
+├── api.py                 # [后端] Python 入口，负责与前端通信
+├── pipeline_modules.py    # [后端] AI 处理核心逻辑
+├── requirements.txt       # [后端] Python 依赖列表
+├── models/                # [模型] 存放下载的大模型文件
+└── css-interface/         # [前端] React + Electron 界面源码
+    ├── src/               # React 源代码
+    ├── electron/          # Electron 主进程代码
+    └── package.json       # 前端配置
 
-### 1. 准备工作
-确保您已安装并启动 Label Studio：
-```bash
-pip install label-studio
-label-studio start
-````
-
-### 2\. 创建验收项目
-1.  label-studio完成加载后会自动打开web-ui
-1.  或者你可以在浏览器打开 `http://localhost:8080`。
-2.  点击 **Create** 创建新项目，命名为 `Diff_Check`。
-
-### 3\. 配置界面 (Labeling Interface)
-
-进入 **Settings** -\> **Labeling Interface** -\> **Code**，删除原有代码，粘贴以下模板：
-
-```xml
-<View>
-  <View style="position: sticky; top: 0; background: #fff; z-index: 100; padding: 10px; border-bottom: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    <Header value="清洗效果验收 (Visual Inspection)" size="5"/>
-    
-    <View style="display: flex; gap: 20px; margin-top: 5px;">
-      <Text name="legend_grey" value="⚪ 灰色 = 结构性切除 (Header/Footer)" style="color: #999; font-size: 14px; font-weight: bold;"/>
-      <Text name="legend_red" value="🔴 红色 = AI 智能清洗 (Noise)" style="color: red; font-weight: bold; font-size: 14px;"/>
-      <Text name="legend_yellow" value="🟡 黄色 = 人工添加 (Missed)" style="color: #d4b106; font-weight: bold; font-size: 14px;"/>
-    </View>
-  </View>
-  
-  <Labels name="label" toName="text">
-    <Label value="HEADER" background="#e0e0e0"/>
-    <Label value="FOOTER" background="#e0e0e0"/>
-    <Label value="NOISE" background="#ff4d4f"/>
-    
-    <Label value="MISSED_NOISE" background="#FFC107" hotkey="m"/>
-  </Labels>
-
-  <View style="padding: 30px; font-size: 18px; line-height: 1.6; font-family: 'Roboto', sans-serif;">
-    <Text name="text" value="$text"/>
-  </View>
-</View>
 ```
-
-*点击 **Save** 保存配置。*
-
-### 4\. 导入数据
-
-1.  点击 **Import**。
-2.  选择输出目录下的 `diff_check.json` (通常在 `Output` 文件夹或各个子文件夹中)。
-
-### 5\. 如何验收
-
-进入标注界面后，您会看到以下颜色编码：
-
-  * **⚪ 灰色区域 (顶部/底部)**：表示被**规则**切除的元数据（标题、日期、来源、版权声明、Document ID）。
-      * *检查点：正文开头是否被误切？*
-  * **🔴 红色区域 (正文中间)**：表示被**AI 模型**判定为垃圾并删除的内容（图片说明、广告、无关链接）。
-      * *检查点：是否有红色的正文句子？（误删）*
-  * **⚫ 黑色区域**：表示最终保留在 TXT 中的正文内容。
-  * **🟡 黄色操作 (可选)**：如果您发现黑色的正文中还残留有垃圾（漏删），请按下快捷键 **`m`** 并框选它。这可以用于后续优化模型。
-
------
-
-![Last Commit](https://img.shields.io/github/last-commit/sc128307/SHOU-NLP-News-Cleaning-Pipeline?label=Last%20Updated&style=flat-square&color=blue)

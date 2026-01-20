@@ -21,7 +21,7 @@ MODEL_CONFIGS = {
 }
 
 # 你的 HF 仓库 ID (如果未来需要更新检查，否则可忽略)
-HF_REPO_ID = "gysgzyh/noise-cleaner-deberta"
+HF_REPO_ID = "gysgzyh/noise-cleaner-deberta-v2"
 
 # === 2. 系统输出重定向 (保持不变) ===
 REAL_STDOUT = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
