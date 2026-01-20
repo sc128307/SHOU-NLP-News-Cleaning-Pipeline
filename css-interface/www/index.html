@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Clean Pro - Review Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow: hidden; }
+        
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* 左侧高亮色块 */
+        .lbl-noise { background-color: #fee2e2; color: #7f1d1d; border-bottom: 2px solid #fca5a5; position: relative; cursor: pointer; transition: all 0.1s; }
+        .lbl-noise:hover { background-color: #fecaca; }
+        .lbl-restored { background-color: #dcfce7; color: #14532d; border-bottom: 2px solid #86efac; position: relative; cursor: pointer; }
+        .lbl-header { background-color: #f1f5f9; color: #94a3b8; }
+        .lbl-footer { background-color: #f1f5f9; color: #94a3b8; }
+        /* 在 index.html 的 style 标签中添加 */
+        .lbl-caption { background-color: #ffedd5; color: #9a3412; border-bottom: 2px solid #fdba74; position: relative; cursor: pointer; }
+        .lbl-caption:hover { background-color: #fed7aa; }
+
+
+        /* 悬浮按钮 */
+        .float-action-btn {
+            position: absolute; top: -1.8em; left: 50%; transform: translateX(-50%);
+            background: #1e293b; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 50; white-space: nowrap; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .lbl-noise:hover .float-action-btn, .lbl-restored:hover .float-action-btn { opacity: 1; pointer-events: auto; }
+
+        .editor-locked { background-color: #f8fafc !important; color: #64748b !important; cursor: not-allowed; }
+
+        .app-container { display: flex; flex-direction: column; height: 100vh; padding-bottom: 0px; box-sizing: border-box; }
+        .editor-container { flex: 1; display: flex; overflow: hidden; border-bottom: 1px solid #e2e8f0; }
+        
+        /* === 核心对齐 CSS === */
+        .editor-font {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+        }
+        
+        /* 使用固定像素行高，确保绝对对齐 */
+        .lh-normal { line-height: 28px !important; } 
+        .lh-expanded { line-height: 56px !important; }
+
+        /* 行号栏通用样式 */
+        .gutter-col {
+            width: 48px;
+            flex-shrink: 0;
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            text-align: right;
+            padding-right: 12px;
+            color: #94a3b8;
+            user-select: none;
+            padding-top: 24px; 
+            padding-bottom: 80px;
+            overflow: hidden; /* 隐藏滚动条，完全由 JS 控制 */
+        }
+        .gutter-item {
+            /* 必须显式指定高度，防止微小误差 */
+            box-sizing: border-box;
+        }
+        
+        /* 内容区通用样式 */
+        .content-col {
+            flex: 1;
+            height: 100%;
+            border: none;
+            outline: none;
+            resize: none;
+            background: transparent;
+            white-space: pre-wrap; /* 自动换行 */
+            word-break: break-word;
+            overflow-y: auto; 
+            padding: 24px 16px 80px 16px; /* Padding Top 必须与 Gutter 一致 */
+            min-width: 0;
+        }
+        
+        /* 左侧特定 */
+        .left-content {
+            padding-right: 16px; 
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        const InstructionsModal = ({ isOpen, onClose }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-bounce-in">
+                        <div className="bg-slate-800 px-6 py-4 flex justify-between items-center">
+                            <h2 className="text-white font-bold text-lg flex items-center gap-2"><i className="ph-bold ph-info"></i> User Instructions</h2>
+                            <button onClick={onClose} className="text-slate-400 hover:text-white"><i className="ph-bold ph-x text-lg"></i></button>
+                        </div>
+                        <div className="p-8 space-y-4 text-slate-700 text-sm">
+                            <p>1. <b>Review</b>: Left is original, Right is editable. Text wraps automatically.</p>
+                            <p>2. <b>Alignment</b>: Line numbers are visual guides based on height.</p>
+                            <p>3. <b>Restore</b>: Click highlights to restore text.</p>
+                            <p>4. <b>Save</b>: Ctrl+S saves and locks the file.</p>
+                        </div>
+                        <div className="bg-slate-50 px-6 py-4 flex justify-end"><button onClick={onClose} className="bg-slate-800 text-white px-6 py-2 rounded-lg font-medium">Acknowledged</button></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Toast = ({ message, type = 'info', onClose }) => {
+            useEffect(() => { const t = setTimeout(onClose, 2000); return () => clearTimeout(t); }, []);
+            const bgClass = type === 'success' ? 'bg-emerald-600' : 'bg-slate-700';
+            return <div className={`fixed bottom-6 right-6 ${bgClass} text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 text-sm font-medium z-50 animate-bounce`}><i className="ph-bold ph-info"></i> {message}</div>;
+        };
+
+        const FileExplorer = ({ onSelectTask, onRequestRun }) => {
+            const savedPath = localStorage.getItem('lastVisitedPath') || '';
+            const [currentPath, setCurrentPath] = useState(savedPath);
+            const [manualInput, setManualInput] = useState(savedPath);
+            const [items, setItems] = useState([]);
+            const [parentPath, setParentPath] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [sortMode, setSortMode] = useState('smart'); 
+            const [viewMode, setViewMode] = useState('grid');
+            const [errorMsg, setErrorMsg] = useState('');
+
+            useEffect(() => {
+                if(currentPath) {
+                    localStorage.setItem('lastVisitedPath', currentPath);
+                    loadDirectory(currentPath);
+                    setManualInput(currentPath);
+                }
+            }, [currentPath]);
+
+            window.reloadCurrentDirectory = () => loadDirectory(currentPath);
+
+            const loadDirectory = async (path) => {
+                setLoading(true); setErrorMsg('');
+                try {
+                    const res = await fetch('/api/list-directory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPath: path }) });
+                    const data = await res.json();
+                    if (data.error) { setErrorMsg(data.error); setItems([]); } 
+                    else { 
+                        setItems(data.items); 
+                        setParentPath(data.parent); // 这里现在能正确拿到后端计算的上一级路径了
+                    }
+                } catch (e) { setErrorMsg("Connection Error"); }
+                setLoading(false);
+            };
+
+
+            const handleBrowseRoot = async () => {
+                try {
+                    setLoading(true);
+                    const res = await fetch('/api/choose-directory', { method: 'POST' });
+                    const data = await res.json();
+                    
+                    if (data.success && data.path) {
+                        setCurrentPath(data.path);
+                        setManualInput(data.path); // 同步更新输入框
+                        // 触发一次加载，防止页面不刷新
+                        loadDirectory(data.path); 
+                    }
+                } catch (e) {
+                    console.error("Browse failed:", e);
+                    setErrorMsg("Failed to open dialog on host.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleManualSubmit = (e) => { e.preventDefault(); if (manualInput.trim()) setCurrentPath(manualInput.trim()); };
+            const enterFolder = (folder) => setCurrentPath(folder.path);
+            const goUp = () => { if (parentPath) setCurrentPath(parentPath); };
+            const isEmptyOfTasks = items.every(i => !i.isTask);
+
+            const sortedItems = useMemo(() => {
+                if (sortMode === 'name') return [...items].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+                return [...items].sort((a, b) => {
+                    const getScore = (item) => {
+                        // 容器和任务都视为重要
+                        if (!item.isTask && !item.isContainer) return -1;
+                        const { checked, total, percent } = item.progress;
+                        if (total > 0 && checked === total) return 1; 
+                        if (total === 0) return 2; 
+                        return 3 + (percent / 100); 
+                    };
+                    return getScore(b) - getScore(a) || a.name.localeCompare(b.name, undefined, { numeric: true });
+                });
+            }, [items, sortMode]);
+
+
+            if (!currentPath) {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50">
+                        <div className="bg-white p-10 rounded-2xl shadow-xl border border-slate-200 text-center max-w-lg w-full">
+                            <i className="ph-duotone ph-folder-notch-open text-6xl text-indigo-500 mb-6"></i>
+                            <h1 className="text-xl font-bold text-slate-800 mb-2">Review Hub</h1>
+                            <form onSubmit={handleManualSubmit} className="mb-4 flex gap-2">
+                                <input type="text" value={manualInput} onChange={(e) => setManualInput(e.target.value)} placeholder="D:\Corpus" className="flex-1 border border-slate-300 rounded-lg px-4 py-3 text-sm font-mono" autoFocus />
+                                <button type="submit" className="px-6 py-3 bg-slate-800 text-white rounded-lg text-sm font-bold">Go</button>
+                            </form>
+                            <button onClick={handleBrowseRoot} className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-lg font-medium hover:border-indigo-500 hover:text-indigo-600 flex items-center justify-center gap-2"><i className="ph-bold ph-desktop"></i> Browse</button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="app-container p-6 max-w-7xl mx-auto w-full">
+                    {/* 顶部导航栏 */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4 shadow-sm flex gap-3 items-center shrink-0">
+                        <button onClick={() => { setCurrentPath(''); localStorage.removeItem('lastVisitedPath'); }} className="p-2 hover:bg-slate-100 rounded text-slate-400"><i className="ph-bold ph-house text-lg"></i></button>
+                        <button onClick={goUp} disabled={!parentPath} className="p-2 hover:bg-slate-100 rounded text-slate-500 disabled:opacity-30"><i className="ph-bold ph-arrow-u-up-left text-lg"></i></button>
+                        <form onSubmit={handleManualSubmit} className="flex-1">
+                            <input type="text" value={manualInput} onChange={(e) => setManualInput(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono text-slate-700" />
+                        </form>
+                        <div className="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
+                            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}><i className="ph-bold ph-squares-four"></i></button>
+                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white shadow text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}><i className="ph-bold ph-list-dashes"></i></button>
+                        </div>
+                        <button onClick={() => setSortMode(s => s === 'smart' ? 'name' : 'smart')} className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50"><i className={`ph-bold ${sortMode === 'smart' ? 'ph-magic-wand text-indigo-500' : 'ph-sort-alpha'}`}></i> {sortMode === 'smart' ? 'Priority' : 'Name'}</button>
+                    </div>
+
+                    {errorMsg && <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-4 flex items-center gap-2 border border-red-100 shrink-0"><i className="ph-bold ph-warning"></i> {errorMsg}</div>}
+
+                    <div className="flex-1 overflow-y-auto min-h-0 pb-10 custom-scrollbar">
+                        {loading ? <div className="py-20 text-center text-slate-400"><i className="ph-bold ph-spinner animate-spin text-3xl mb-3"></i><p>Scanning...</p></div> : 
+                         sortedItems.length === 0 ? <div className="py-20 text-center text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200">Empty directory</div> : 
+                         <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col gap-2"}>
+                            {sortedItems.map(item => (
+                                <div key={item.name} className={`group bg-white border border-slate-200 rounded-xl hover:shadow-lg transition-all cursor-default relative overflow-hidden flex ${viewMode === 'grid' ? 'flex-col p-5' : 'flex-row items-center p-3 gap-4'}`}>
+                                    {/* 侧边条颜色：任务用 indigo/emerald，容器用 amber/orange */}
+                                    {(item.isTask || item.isContainer) && <div className={`absolute top-0 left-0 bottom-0 w-1.5 ${item.progress.total > 0 && item.progress.checked === item.progress.total ? 'bg-emerald-500' : (item.isContainer ? 'bg-amber-500' : 'bg-indigo-500')}`}></div>}
+                                    
+                                    <div className={`flex items-center gap-4 ${viewMode === 'grid' ? 'mb-4 pl-2' : 'flex-1 pl-2'}`}>
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0 shadow-sm ${
+                                            item.isTask 
+                                                ? (item.progress.total > 0 && item.progress.checked === item.progress.total ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600') 
+                                                : item.isContainer 
+                                                    ? 'bg-amber-50 text-amber-600' // 容器用橙色图标
+                                                    : 'bg-slate-50 text-slate-400'
+                                        }`}>
+                                            <i className={`ph-bold ${item.isTask ? 'ph-kanban' : item.isContainer ? 'ph-folders' : 'ph-folder-simple'}`}></i>
+                                        </div>
+                                        <div className="flex flex-col min-w-0 flex-1">
+                                            <span className="font-bold text-slate-800 text-sm truncate" title={item.name}>{item.name}</span>
+                                            {(item.isTask || item.isContainer) ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
+                                                        item.progress.total > 0 && item.progress.checked === item.progress.total 
+                                                            ? 'bg-emerald-100 text-emerald-700' 
+                                                            : (item.isContainer ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700')
+                                                    }`}>
+                                                        {item.progress.checked}/{item.progress.total}
+                                                    </span>
+                                                    {/* 区分 Files 和 Folders */}
+                                                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">{item.isContainer ? 'Sub-Folders' : 'Files'}</span>
+                                                </div>
+                                            ) : <span className="text-xs text-slate-400 font-medium">Directory</span>}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className={`${viewMode === 'grid' ? 'mt-auto pl-2' : 'shrink-0 w-48'}`}>
+                                        {(item.isTask || item.isContainer) ? (
+                                            <div className="space-y-2">
+                                                {/* 进度条：容器用橙色，任务用蓝色/绿色 */}
+                                                {viewMode === 'grid' && item.progress.total > 0 && (
+                                                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
+                                                        <div className={`h-full transition-all duration-500 ${
+                                                            item.progress.checked === item.progress.total 
+                                                                ? 'bg-emerald-500' 
+                                                                : (item.isContainer ? 'bg-amber-500' : 'bg-indigo-500')
+                                                        }`} style={{width: `${item.progress.percent}%`}}></div>
+                                                    </div>
+                                                )}
+                                                
+                                                <div className="flex gap-2">
+                                                    {item.isTask ? (
+                                                        item.progress.total > 0 
+                                                            ? <button onClick={() => onSelectTask(item.path)} className="flex-1 py-2 bg-slate-800 text-white rounded text-xs font-bold hover:bg-slate-700 shadow flex items-center justify-center gap-2">REVIEW</button> 
+                                                            : <button onClick={() => onRequestRun(item.path)} className="flex-1 py-2 bg-slate-100 text-slate-600 rounded text-xs font-bold hover:bg-slate-200 flex items-center justify-center gap-2"><i className="ph-bold ph-play"></i> RUN</button>
+                                                    ) : (
+                                                        // 如果是容器，按钮还是 Open，但由于显示了进度条，用户知道它是进度的聚合
+                                                        <button onClick={() => enterFolder(item)} className="w-full py-2 border border-slate-200 text-slate-600 rounded text-xs font-bold hover:border-indigo-500 hover:text-indigo-600 transition-colors">Open Group</button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : <button onClick={() => enterFolder(item)} className="w-full py-2 border border-slate-200 text-slate-600 rounded text-xs font-bold hover:border-slate-300 hover:bg-slate-50">Open</button>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        }
+                    </div>
+                </div>
+            );
+        };
+
+        const Editor = ({ taskPath, onBack }) => {
+            const [files, setFiles] = useState([]);
+            const [selectedFile, setSelectedFile] = useState(null);
+            const [saveStatus, setSaveStatus] = useState('saved'); 
+            const [editedText, setEditedText] = useState("");
+            const [visualLineCount, setVisualLineCount] = useState(1);
+            const [sortBy, setSortBy] = useState('pending');
+            const [showInstructions, setShowInstructions] = useState(false);
+            const [toast, setToast] = useState(null);
+            const [isExpanded, setIsExpanded] = useState(false);
+            const [restoredIndices, setRestoredIndices] = useState(new Set());
+            
+            const textareaRef = useRef(null);
+            const leftRef = useRef(null);
+            const rightGutterRef = useRef(null);
+
+            const isLocked = selectedFile?.checked?.trim() === 'Yes';
+
+            useEffect(() => { if(!localStorage.getItem('instructionsSeen')) setShowInstructions(true); }, []);
+
+            // 滚动同步处理
+            const handleScroll = (e) => {
+                const target = e.target;
+                const scrollTop = target.scrollTop;
+                if (target === textareaRef.current) {
+                    if (leftRef.current) leftRef.current.scrollTop = scrollTop;
+                    if (rightGutterRef.current) rightGutterRef.current.scrollTop = scrollTop;
+                } else if (target === leftRef.current) {
+                    if (textareaRef.current) textareaRef.current.scrollTop = scrollTop;
+                    if (rightGutterRef.current) rightGutterRef.current.scrollTop = scrollTop;
+                }
+            };
+
+            useEffect(() => {
+                if (textareaRef.current) {
+                    // 根据展开状态决定行高 (28px 或 56px)
+                    const lineHeight = isExpanded ? 56 : 28; 
+                    const lines = Math.ceil(textareaRef.current.scrollHeight / lineHeight) + 10;
+                    setVisualLineCount(lines > 0 ? lines : 1);
+                }
+            }, [editedText, isExpanded, selectedFile]);
+
+            useEffect(() => {
+                fetch('/api/get-files', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dir: taskPath }) })
+                .then(res => res.json())
+                .then(data => {
+                    const sortedData = data.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+                    setFiles(sortedData);
+                    if (sortedData.length > 0) {
+                        const firstUnchecked = sortedData.find(f => f.checked === 'No');
+                        handleSelectFile(firstUnchecked || sortedData[0]);
+                    }
+                });
+            }, [taskPath]);
+
+            // index.html -> Editor 组件内部
+
+            const handleSelectFile = (file) => {
+                setSelectedFile(file);
+                setRestoredIndices(new Set());
+                
+                // [核心修改] 构建带元数据标签的完整文本
+                const meta = file.metadata || { title: '', date: '', source: '' };
+                const bodyText = file.cleaned || file.original;
+
+                // 检查内容是否已经包含了标签（防止重复拼接）
+                const hasStructure = /<title/i.test(bodyText) || /<body/i.test(bodyText);
+                if (hasStructure) {
+                    // 已经是 XML 结构（或者之前保存过），直接显示
+                    setEditedText(bodyText);
+                } else {
+                    // 确实是纯文本，才手动拼接 XML 头
+                    const fullText =  
+`<title>${meta.title}</title>
+<date>${meta.date}</date>
+<source>${meta.source}</source>
+<body>
+${bodyText}
+</body>`;
+                    setEditedText(fullText);
+                }
+                
+                setSaveStatus('saved');
+            };
+
+            const toggleExpand = () => setIsExpanded(!isExpanded);
+
+            const handleRestore = (item, idx) => {
+                if (isLocked) return; 
+                // [结构修复] 数据结构改为扁平，直接取 text
+                const textToRestore = item.text;
+                setRestoredIndices(new Set(restoredIndices).add(idx));
+                
+                // 简单的追加逻辑，或者你可以根据 item.start 插入到正确位置
+                // 这里暂时保持追加到末尾或光标处，或者更智能的插入
+                // 为简单起见，这里演示追加，实际生产环境可能需要根据 offset 插入
+                const newText = editedText + " " + textToRestore;
+                
+                setEditedText(newText);
+                setSaveStatus('unsaved');
+            };
+
+            const handleUndo = (item, idx) => {
+                if (isLocked) return;
+                const textToRemove = item.text;
+                const newSet = new Set(restoredIndices);
+                newSet.delete(idx);
+                setRestoredIndices(newSet);
+                // 简单的移除逻辑
+                setEditedText(editedText.replace(textToRemove, ""));
+                setSaveStatus('unsaved');
+            };
+
+            const handleFormat = () => {
+                if (isLocked) return;
+                let txt = editedText.split('\n').map(l => l.trim()).join('\n').replace(/(\w+)\s+([.,;:?!])/g, '$1$2').replace(/ +/g, ' ');
+                setEditedText(txt);
+                setSaveStatus('unsaved');
+            };
+
+            // 头部卡片高度：h-48 (12rem/192px) 足够容纳 Title/Date/Source 和 原文 Header
+            const HEADER_HEIGHT_CLASS = "h-48";
+
+            // 在 Editor 组件渲染逻辑中获取切割点
+            const currentMeta = selectedFile?.metadata || {};
+            const highlights = selectedFile?.highlights || [];
+            const headerHighlight = highlights.find(h => h.type === 'HEADER');
+            const headerEnd = headerHighlight ? headerHighlight.end : 0;
+
+            // 切割原文
+            const rawHeaderText = selectedFile?.original_text?.substring(0, headerEnd) || "";
+            const rawBodyText = selectedFile?.original_text?.substring(headerEnd) || "";
+
+            // Left Render: 渲染原始文本和高亮
+            const renderOriginalContent = () => {
+                if (!selectedFile) return null;
+                const text = selectedFile.original;
+                // [核心修复] 字段名改为 highlights
+                const labels = selectedFile.highlights || [];
+                
+                const spans = [];
+                let cursor = 0;
+                // [结构修复] 扁平化排序
+                const sortedLabels = [...labels].sort((a, b) => a.start - b.start);
+
+                sortedLabels.forEach((item, idx) => {
+                    // [结构修复] 直接解构 start, end, type
+                    const { start, end, type } = item;
+                    const isRestored = restoredIndices.has(idx);
+                    
+                    if (start > cursor) spans.push({ type: 'normal', text: text.substring(cursor, start) });
+
+                    spans.push({ type: type, text: text.substring(start, end), idx, item, isRestored });
+                    cursor = end;
+                });
+                if (cursor < text.length) spans.push({ type: 'normal', text: text.substring(cursor) });
+
+                return (
+                    <div className={`editor-font ${isExpanded ? 'lh-expanded' : 'lh-normal'}`}>
+                        {spans.map((span, sIdx) => {
+                            if (span.type === 'normal') return <span key={sIdx}>{span.text}</span>;
+                            
+                            let className = "lbl-noise";
+                            // 根据实际 type 分配颜色
+                            if (span.type === 'HEADER') className = "lbl-header";
+                            else if (span.type === 'FOOTER') className = "lbl-footer";
+                            else if (span.type && span.type.includes('CAPTION')) className = "lbl-caption"; // 适配你的 Photo Caption
+                            
+                            // 如果被恢复了，覆盖为绿色样式
+                            if (span.isRestored) className = "lbl-restored";
+
+                            // 判断是否允许 Restore 操作 (Header/Footer 通常不允许)
+                            const isInteractive = !['HEADER', 'FOOTER'].includes(span.type);
+
+                            return (
+                                <span key={sIdx} className={className} title={span.type}>
+                                    {span.text}
+                                    {isInteractive && !isLocked && (
+                                        <div className="float-action-btn" onClick={(e) => { e.stopPropagation(); span.isRestored ? handleUndo(span.item, span.idx) : handleRestore(span.item, span.idx); }}>
+                                            {span.isRestored ? 'Undo' : 'Restore'}
+                                        </div>
+                                    )}
+                                </span>
+                            );
+                        })}
+                    </div>
+                );
+            };
+
+            const sortedFiles = useMemo(() => {
+                let res = [...files];
+                const sorter = (a, b) => a.id.localeCompare(b.id, undefined, {numeric: true});
+                if (sortBy === 'pending') res.sort((a, b) => { 
+                    const statusA = a.checked?.trim();
+                    const statusB = b.checked?.trim();
+                    if (statusA === statusB) return sorter(a,b); 
+                    return statusA === 'No' ? -1 : 1; });
+                else res.sort(sorter);
+                return res;
+            }, [files, sortBy]);
+
+            const stats = useMemo(() => ({ checked: files.filter(f => f.checked?.trim() === 'Yes').length, total: files.length }), [files]);
+
+            const handleToggleCheck = async () => {
+                if (!selectedFile) return;
+                setSaveStatus('saving');
+                const newStatus = isLocked ? 'No' : 'Yes'; 
+                const contentToSave = editedText; 
+
+                const updatedFile = { ...selectedFile, checked: newStatus };
+                setSelectedFile(updatedFile);
+                setFiles(files.map(f => f.id === selectedFile.id ? {...f, checked: newStatus, justSaved: newStatus === 'Yes'} : f));
+
+                await fetch('/api/save-file', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ dir: taskPath, fileId: selectedFile.id, content: contentToSave, status: newStatus })
+                });
+                
+                setSaveStatus('saved');
+                if (newStatus === 'Yes') {
+                    // 检查是否全部完成
+                    const allDone = files.map(f => f.id === selectedFile.id ? {...f, checked: 'Yes'} : f).every(f => f.checked === 'Yes');
+                    if (allDone) setToast({ message: "🎉 All tasks completed!", type: 'success' });
+                    setTimeout(() => {
+                        setFiles(prev => prev.map(f => ({...f, justSaved: false})));
+                        const nextUnchecked = sortedFiles.find(f => f.id !== selectedFile.id && f.checked?.trim() !== 'Yes');
+                        if (nextUnchecked) {
+                            // 只有当还有未完成的任务时，才自动跳转
+                            handleSelectFile(nextUnchecked);
+                        } else {
+                            // 如果没有未完成的了，什么都不做（停在当前文件），或者你可以选择返回列表
+                            // console.log("All done, staying put.");
+                        }
+                    }, 1000);
+                }
+            };
+
+
+            // === 跳过文件逻辑 ===
+            const handleSkip = async () => {
+                if (!selectedFile) return;
+                
+                // 简单的防误触（可选，如果觉得烦可以去掉）
+                if (!confirm(`Are you sure you want to remove "${selectedFile.id}" from the list?`)) return;
+
+                setSaveStatus('saving');
+
+                try {
+                    // 1. 调用后端 API 从 CSV 删除
+                    const res = await fetch('/api/skip-file', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ dir: taskPath, fileId: selectedFile.id })
+                    });
+
+                    if (res.ok) {
+                        // 2. 计算下一个要跳转的文件 (在删除当前文件之前计算)
+                        const currentIdx = sortedFiles.findIndex(f => f.id === selectedFile.id);
+                        let nextFile = null;
+                        if (sortedFiles.length > 1) {
+                            // 优先跳到下一个，如果是最后一个则跳到上一个
+                            nextFile = currentIdx < sortedFiles.length - 1 
+                                ? sortedFiles[currentIdx + 1] 
+                                : sortedFiles[currentIdx - 1];
+                        }
+
+                        // 3. 更新前端状态：从列表中移除
+                        const newFiles = files.filter(f => f.id !== selectedFile.id);
+                        setFiles(newFiles);
+
+                        // 4. 跳转或清空
+                        if (nextFile && newFiles.length > 0) {
+                            handleSelectFile(nextFile);
+                        } else {
+                            setSelectedFile(null);
+                            setEditedText('');
+                        }
+
+                        setSaveStatus('saved');
+                        setToast({ message: "File skipped & removed", type: 'success' });
+                    } else {
+                        alert("Failed to skip file on server");
+                        setSaveStatus('error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    setSaveStatus('error');
+                }
+            };
+
+            const handleReturn = () => { onBack(); if(window.reloadCurrentDirectory) window.reloadCurrentDirectory(); };
+
+            return (
+                <div className="app-container">
+                    <InstructionsModal isOpen={showInstructions} onClose={() => { setShowInstructions(false); localStorage.setItem('instructionsSeen', 'true'); }} />
+                    {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+
+                    {/* Header Bar */}
+                    <div className="h-16 bg-slate-50 border-b border-slate-200 flex items-center justify-between px-6 shrink-0 shadow-sm z-20">
+                        <div className="flex items-center gap-4">
+                            <button onClick={handleReturn} className="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"><i className="ph-bold ph-arrow-left text-lg"></i></button>
+                            <div>
+                                <h2 className="font-bold text-slate-800 text-sm flex items-center gap-2"><i className="ph-fill ph-folder text-indigo-600"></i>{taskPath.split(/[\\/]/).pop()}</h2>
+                                <div className="text-[10px] text-slate-500 font-mono flex items-center gap-2"><span className="opacity-75">{selectedFile?.id}</span><span className="bg-slate-200 px-1.5 rounded text-slate-700 font-bold">{stats.checked} / {stats.total}</span></div>
+                            </div>
+                        </div>
+                        {/* Save Status and Checked Button */}
+                        <div className="flex items-center gap-4">
+                            <span className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 ${saveStatus === 'unsaved' ? 'text-amber-700 bg-amber-50 border border-amber-100' : 'text-slate-400 border border-transparent'}`}><div className={`w-2 h-2 rounded-full ${saveStatus === 'unsaved' ? 'bg-amber-500' : 'bg-slate-300'}`}></div>{saveStatus === 'unsaved' ? 'Unsaved' : 'Saved'}</span>
+                            {/* Check/Uncheck Button */}
+                            <button 
+                                onClick={handleToggleCheck} 
+                                className={`px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg transition-all flex items-center gap-2 active:scale-95 ${isLocked ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-slate-300'}`}
+                            >
+                                {isLocked ? <><i className="ph-bold ph-lock-open"></i> Unmark to Edit</> : <><i className="ph-bold ph-check-circle"></i> Mark Checked</>}
+                            </button>
+                            {/* Skip Button */}
+                            <button 
+                                onClick={handleSkip}
+                                disabled={isLocked}
+                                className="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition-colors mr-2"
+                                title="Skip this file (Remove from list)"
+                            >
+                                <i className="ph-bold ph-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Editor Main Area */}
+                    <div className="editor-container bg-slate-100">
+                        {/* File List Sidebar */}
+                        <div className="w-56 bg-white border-r border-slate-200 flex flex-col shrink-0 z-10">
+                            <div className="p-3 border-b border-slate-100 flex justify-between items-center bg-slate-50"><span className="text-xs font-bold text-slate-500 uppercase ml-2 tracking-wider">File List</span><button onClick={() => setSortBy(s => s === 'pending' ? 'name' : 'pending')} className="text-xs px-2 py-1 bg-white border border-slate-200 rounded text-slate-600 hover:text-indigo-600 transition-colors shadow-sm"><i className="ph-bold ph-sort-ascending"></i> {sortBy === 'pending' ? 'Pending' : 'Name'}</button></div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                {sortedFiles.map(file => (
+                                    <div key={file.id} onClick={() => handleSelectFile(file)} className={`px-4 py-3.5 border-b border-slate-50 cursor-pointer text-xs flex items-center justify-between group transition-all relative overflow-hidden ${selectedFile?.id === file.id ? 'bg-indigo-50 text-indigo-700 font-bold border-l-4 border-l-indigo-500' : 'text-slate-600 hover:bg-slate-50 border-l-4 border-l-transparent'} ${file.checked === 'Yes' && selectedFile?.id !== file.id ? 'bg-emerald-50/50' : ''} ${file.justSaved ? 'animate-sweep bg-emerald-100' : ''}`}>
+                                        <span className="truncate flex-1 z-10 relative">{file.id}</span>
+                                        {file.checked === 'Yes' && <i className={`ph-fill ph-check-circle text-emerald-500 z-10 relative ${file.justSaved ? 'animate-bounce' : ''}`}></i>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Split Panes */}
+                        <div className="flex-1 grid grid-cols-2 bg-slate-200 gap-px overflow-hidden min-w-0">
+                            {/* Left Pane */}
+                            <div className="flex flex-col bg-slate-50 overflow-hidden h-full min-w-0">
+                                <div className="h-10 bg-slate-100 border-b border-slate-200 flex items-center justify-between px-4 shrink-0"><span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Original Input</span><div className="flex gap-3 text-[10px] font-medium opacity-80"><span className="flex items-center gap-1.5"><div className="w-2 h-2 bg-red-400 rounded-full"></div> Noise</span><span className="flex items-center gap-1.5"><div className="w-2 h-2 bg-emerald-400 rounded-full"></div> Restored</span></div></div>
+                                <div 
+                                    ref={leftRef} 
+                                    onScroll={handleScroll}
+                                    className="content-col left-content"
+                                >
+                                    {renderOriginalContent()}
+                                </div>
+                            </div>
+
+                            {/* Right Pane */}
+                            <div className="flex flex-col bg-white overflow-hidden h-full min-w-0 relative">
+                                <div className="h-10 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 z-10"><span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Clean Output {isLocked && '(Locked)'}</span><div className="flex items-center gap-2"><button onClick={toggleExpand} disabled={isLocked} className={`text-[10px] flex items-center gap-1 px-2 py-1 border border-slate-200 rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isExpanded ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50'}`}><i className={`ph-bold ${isExpanded ? 'ph-arrows-in-line-vertical' : 'ph-arrows-out-line-vertical'}`}></i>{isExpanded ? 'Collapse' : 'Expand'}</button><button onClick={handleFormat} disabled={isLocked} className="text-[10px] flex items-center gap-1 px-2 py-1 bg-slate-50 border border-slate-200 rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><i className="ph-bold ph-magic-wand"></i> Format</button></div></div>
+                                
+                                <div className="relative flex flex-1 overflow-hidden min-w-0">
+                                    <div ref={rightGutterRef} className={`gutter-col editor-font ${isExpanded ? 'lh-expanded' : 'lh-normal'}`}>
+                                        {Array.from({length: visualLineCount}).map((_, i) => (
+                                            <div key={i} className="gutter-item">{i + 1}</div>
+                                        ))}
+                                    </div>
+                                    <textarea 
+                                        ref={textareaRef} 
+                                        onScroll={handleScroll}
+                                        className={`content-col right-textarea editor-font ${isLocked ? 'editor-locked' : ''} ${isExpanded ? 'lh-expanded' : 'lh-normal'}`} 
+                                        value={editedText} 
+                                        onChange={(e) => { setEditedText(e.target.value); setSaveStatus('unsaved'); }} 
+                                        spellCheck="false" 
+                                        readOnly={isLocked}
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [currentTask, setCurrentTask] = useState(null);
+            const handleRequestRun = async (path) => { await fetch('/api/request-run', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ dir: path }) }); alert("Request sent!"); };
+            return currentTask ? <Editor taskPath={currentTask} onBack={() => setCurrentTask(null)} /> : <FileExplorer onSelectTask={setCurrentTask} onRequestRun={handleRequestRun} />;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "positive": [
+    "Diplomacy and bilateral relations between countries",
+    "Government official visits and high-level meetings",
+    "Belt and Road Initiative and infrastructure projects",
+    "South China Sea disputes and maritime security",
+    "International trade agreements and economic cooperation",
+    "Chinese state-owned enterprises investment",
+    "Foreign ministry statements and embassies",
+    "Political ideology and party congress"
+  ],
+  "negative": [
+    "Commercial banking awards and financial performance reports",
+    "Retail promotions, shopping, and restaurant food reviews",
+    "Travel holiday packages and tourism advertisements",
+    "Sports match results and athlete news",
+    "Entertainment, celebrity gossip, and movies",
+    "Routine crime reports and local accidents",
+    "Stock market fluctuations and corporate shareholders meeting",
+    "Art exhibitions and cultural performances tickets",
+    "Newspaper publisher notes, editorial disclaimers, and advertising supplements"
+  ]
+}

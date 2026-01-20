@@ -1,0 +1,21 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# === Node.js (前端) ===
+node_modules/
+dist/
+build/
+.DS_Store
+
+# === Models (模型文件太大，不上传) ===
+models/
+*.bin
+*.pth
+*.h5
+
+# === IDE ===
+.vscode/
+.idea/
