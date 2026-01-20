@@ -84,8 +84,8 @@ npm install
 
 请从以下任一地址下载模型包：
 
-* **百度网盘**: [点击这里下载] (提取码: `vx86`) *(请填入你真实的链接)*
-* **HuggingFace**: [点击这里下载] *(如果你上传了的话)*
+* **百度网盘**: [[点击这里下载](https://pan.baidu.com/s/1r9Ibe0J1Co0uqQShbOcIFQ?pwd=d79v)] 提取码: `d79v`
+* **HuggingFace**: [[点击这里下载](https://huggingface.co/gysgzyh/noise-cleaner-deberta-v2/)]
 
 ### 2. 放置模型
 
