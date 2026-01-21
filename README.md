@@ -229,10 +229,11 @@ npm install
 
 请点击下方链接下载模型包（二选一）：
 
-* **百度网盘**: [[点击这里下载](https://pan.baidu.com/s/1r9Ibe0J1Co0uqQShbOcIFQ?pwd=d79v)] (提取码: d79v)
+* **百度网盘**: [[点击这里下载](https://pan.baidu.com/s/1zb2Q2QKJhAWB6mlXX9k2lg?pwd=insp)] (提取码: insp)
 * **HuggingFace (需要梯子)**: [[点击这里下载](https://huggingface.co/gysgzyh/noise-cleaner-deberta-v2/)]
 
-> **提示**：下载后你会得到一个压缩包。请先把它们**解压**出来备用。
+> **提示**：下载后你会得到两个压缩包。请先把它们**解压**出来备用。
+
 
 ---
 
