@@ -1,5 +1,6 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+import * as fs from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process'
 import icon from '../../resources/icon.png?asset'
@@ -7,7 +8,28 @@ import icon from '../../resources/icon.png?asset'
 import { startServer, setReviewDir, setMainWindow } from './server' // 新增 setMainWindow
 
 // === 配置区 ===
-const PYTHON_PATH = 'D:\\anaconda3\\envs\\nlp-corpus\\python.exe'
+const CONFIG_PATH = is.dev
+  ? join(__dirname, '../../config.json') 
+  : join(process.resourcesPath, 'config.json')
+
+let PYTHON_PATH = 'python' // 默认值，万一没配置文件就用系统默认的
+  
+try {
+  if (fs.existsSync(CONFIG_PATH)) {
+    const rawData = fs.readFileSync(CONFIG_PATH, 'utf-8')
+    const config = JSON.parse(rawData)
+    // 如果配置文件里写了 pythonPath，就用它；否则保持默认
+    if (config.pythonPath) {
+      PYTHON_PATH = config.pythonPath
+      console.log(`[Config] Loaded Python path: ${PYTHON_PATH}`)
+    }
+  } else {
+    console.warn(`[Config] Warning: config.json not found at ${CONFIG_PATH}, using default 'python'`)
+  }
+} catch (error) {
+  console.error('[Config] Error reading config.json:', error)
+}
+
 const PYTHON_SCRIPT = join(__dirname, '../../api.py')
 
 let pythonProcess: ChildProcessWithoutNullStreams | null = null

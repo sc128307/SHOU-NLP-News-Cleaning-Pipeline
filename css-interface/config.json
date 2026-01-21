@@ -1,0 +1,4 @@
+{
+  "pythonPath": "D:\\...\\envs\\nlp-tool\\python.exe",
+  "comment": "Windows使用双反斜杠，Mac/Linux使用正常斜杠，将pythonPath的地址改为你新建的环境中的python解释器地址"
+}
