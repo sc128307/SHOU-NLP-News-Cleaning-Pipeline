@@ -129,7 +129,7 @@ conda activate nlp-tool
 > **检查点**：
 > 看看你的命令行最前面，是不是出现了一个括号 **`(nlp-tool)`**？
 > * ✅ 如果是 `(nlp-tool) D:\...` -> **成功！** 继续下一步。
-> <img src="./screenshots/env_correct.png" width="500" alt="env_correct">
+<img src="./screenshots/env_correct.png" width="500" alt="env_correct">
 > * ❌ 如果还是 `(base)` 或者没有括号 -> **失败！** 请重新运行上面的激活命令，或者检查 Miniconda 是否安装正确。
 <img src="./screenshots/env_wrong.png" width="450" alt="env_wrong">
 > 
